@@ -4,20 +4,29 @@ local bufopt = vim.bo
 local winopt = vim.wo
 
 local recent_cache = {}
+local curr_hightlight_match_ids = {}
+local next_highlight_match_id = 77777
+
+local function clear_highlights()
+  for i=1, #curr_hightlight_match_ids do
+    fn.matchdelete(curr_hightlight_match_ids[i])
+  end
+  curr_hightlight_match_ids = {}
+end
 
 local function generate_minimap(buf_nr)
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
   local minimap_win_id = fn.win_getid(minimap_win_nr)
 
-  local hscale = 2.0 * 15 / math.min(fn.winwidth('%'), 120)
-  local vscale = 4.0 * fn.winheight(minimap_win_id) / fn.line('$')
-  local output = fn.execute("w !code-minimap "..fn.expand('%').." -H "..hscale.." -V "..vscale.." --padding 15")
+  local wscale = 2.0 * 15 / math.min(fn.winwidth('%'), 110)
+  local hscale = 4.0 * fn.winheight(minimap_win_id) / fn.line('$')
+  local output = fn.execute("w !code-minimap "..fn.expand('%').." -H "..wscale.." -V "..hscale.." --padding 15")
 
   -- save to cache
   recent_cache[buf_nr] = {
-    minimap_win_id = minimap_win_id,
-    minimap_win_nr = minimap_win_nr,
-    minimap_content = output
+    win_id = minimap_win_id,
+    win_nr = minimap_win_nr,
+    content = output
   }
 end
 
@@ -26,8 +35,8 @@ local function render_minimap(buf_nr)
     return
   end
 
-  local minimap_win_nr = recent_cache[buf_nr].minimap_win_nr
-  local minimap_content = recent_cache[buf_nr].minimap_content
+  local minimap_win_nr = recent_cache[buf_nr].win_nr
+  local minimap_content = recent_cache[buf_nr].content
 
   -- switch to the minimap window
   vim.cmd(minimap_win_nr.." . ".."wincmd w")
@@ -36,13 +45,49 @@ local function render_minimap(buf_nr)
   vim.cmd("silent 1,$delete _")
   fn.execute("normal! Go"..tostring(minimap_content)) -- add to minimap buffer
   vim.cmd("silent 1,3delete _")
+  vim.cmd("silent $delete _")
+  vim.cmd("silent $delete _")
   bufopt.modifiable = false
 
   -- back to the source file
   vim.cmd("wincmd p")
 end
 
+local function on_scroll()
+  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
+  -- return if no minimap open
+  -- should never be the case here, but still make sure
+  if minimap_win_nr == -1 then
+    return
+  end
+
+  local curr_total_lns = fn.line("$")
+  local curr_line_percent = fn.line(".") / curr_total_lns
+  local curr_ft = bufopt.filetype
+
+  vim.cmd("wincmd p")
+  local target_total_lns = fn.line("$")
+  local target_line = math.max(math.floor(target_total_lns * curr_line_percent + 0.5), 1)
+
+  if curr_ft == 'minimap' then
+    fn.cursor(tostring(target_line), 0)
+  else
+    clear_highlights()
+    fn.matchaddpos("Title", {target_line}, 200, next_highlight_match_id)
+    curr_hightlight_match_ids[1] = next_highlight_match_id
+    next_highlight_match_id = next_highlight_match_id + 1
+  end
+
+  vim.cmd("wincmd p")
+end
+
 local function open()
+  -- return if minimap is already open
+  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
+  if minimap_win_nr > -1 then
+    return
+  end
+
   vim.cmd("noautocmd execute 'silent! ' . 'botright vertical' . 15 . 'split ' . '-MINIMAP-'")
 
   -- buffer options
@@ -80,11 +125,12 @@ local function update()
     return
   end
 
+  local curr_buf_nr = fn.bufnr('%')
+
   if bufopt.filetype == 'minimap' then
-    vim.cmd("wincmd p")
+    return
   end
 
-  local curr_buf_nr = fn.bufnr('%')
   if recent_cache[curr_buf_nr] == nil then
     generate_minimap(curr_buf_nr)
   end
@@ -99,24 +145,12 @@ local function close()
     return
   end
 
-  if fn.winnr() == minimap_win_nr then
-    -- make sure to not close other minimaps
-    if fn.winbufnr(2) ~= nil then
-      fn.close()
-      vim.cmd("wincmd p")
-    end
-  else
-    vim.cmd(minimap_win_nr.." . ".."wincmd c")
-  end
-end
-
-local function simpleminimap()
-  open()
+  vim.cmd(minimap_win_nr.." . ".."wincmd c")
 end
 
 return {
-  simpleminimap = simpleminimap,
   open = open,
   close = close,
-  update = update
+  update = update,
+  on_scroll = on_scroll
 }
