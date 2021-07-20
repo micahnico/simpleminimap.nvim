@@ -135,7 +135,7 @@ local function open()
   vim.cmd("wincmd p")
 end
 
-local function on_buf_enter()
+local function on_update(force)
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
   if minimap_win_nr == -1 or bufopt.filetype == 'minimap' or is_blocked(bufopt.filetype, bufopt.buftype) then
     return
@@ -143,7 +143,7 @@ local function on_buf_enter()
 
   local curr_buf_nr = fn.bufnr('%')
 
-  if recent_cache[curr_buf_nr] == nil then
+  if force or recent_cache[curr_buf_nr] == nil then
     generate_minimap(curr_buf_nr)
   end
   render_minimap(curr_buf_nr)
@@ -166,6 +166,6 @@ end
 return {
   open = open,
   close = close,
-  on_buf_enter = on_buf_enter,
+  on_update = on_update,
   on_move = on_move
 }
