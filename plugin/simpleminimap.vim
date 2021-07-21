@@ -1,5 +1,10 @@
 if exists('g:loaded_simpleminimap') | finish | endif " prevent loading file twice
 
+if !executable('code-minimap')
+  echom 'code-minimap must be installed for simpleminimap.nvim to work'
+  finish
+endif
+
 let s:save_cpo = &cpo " save user coptions
 set cpo&vim " reset them to defaults
 
