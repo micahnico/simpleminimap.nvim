@@ -36,6 +36,11 @@ local function clear_highlight(minimap_win_id)
   end
 end
 
+local function update_cursor_pos(bufnr, line, col)
+  recent_cache[bufnr].line = line
+  recent_cache[bufnr].col = col
+end
+
 local function open()
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
   if minimap_win_nr > -1
@@ -105,7 +110,11 @@ local function generate_minimap(buf_nr)
 
   -- save to cache
   if #minimap_content > 0 then
-    recent_cache[buf_nr] = minimap_content
+    recent_cache[buf_nr] = {
+      content = minimap_content,
+      line = fn.line("."),
+      col = fn.col("."),
+    }
   end
 end
 
@@ -119,7 +128,7 @@ local function render_minimap(buf_nr)
   cmd(minimap_win_nr.." . ".."wincmd w")
   bufopt.modifiable = true
   cmd("silent 1,$delete _")
-  fn.append(1, recent_cache[buf_nr])
+  fn.append(1, recent_cache[buf_nr].content)
   cmd("silent 1delete _")
   bufopt.modifiable = false
   -- back to the source file
@@ -133,9 +142,10 @@ local function on_move()
   end
 
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  local curr_buf_nr = fn.bufnr('%')
+  local cur_bufnr = fn.bufnr('%')
   if minimap_win_nr == -1
-      or (recent_cache[curr_buf_nr] == nil and bufopt.filetype ~= 'minimap')
+      or (bufopt.filetype ~= 'minimap' and recent_cache[cur_bufnr] == nil)
+      or (bufopt.filetype ~= 'minimap' and recent_cache[cur_bufnr].col ~= fn.col(".") and recent_cache[cur_bufnr].line == fn.line("."))
       or handling_move
       or is_blocked(bufopt.filetype, bufopt.buftype) then
     return
@@ -147,19 +157,27 @@ local function on_move()
   local curr_line_percent = fn.line(".") / curr_total_lns
   local curr_ft = bufopt.filetype
 
-  local source_bufnr = fn.bufnr("%")
+  local source_bufnr = fn.bufnr('%')
+  local source_line = fn.line(".")
+  local source_col = fn.col(".")
 
   -- go to the line in the source file if in minimap
+  -- update the source variables along the way
   if curr_ft == 'minimap' then
     cmd("wincmd p")
     source_bufnr = fn.bufnr("%")
     local source_total_lns = fn.line("$")
     local coor_source_line = math.max(math.floor(source_total_lns * curr_line_percent + 0.5), 1)
     fn.cursor(tostring(coor_source_line), 0)
+    source_line = coor_source_line
+    source_col = 0
     cmd("wincmd p")
   end
 
-  local minimap_total_lns = #recent_cache[source_bufnr]
+  -- update the cached cursor position for the source buffer
+  update_cursor_pos(source_bufnr, source_line, source_col)
+
+  local minimap_total_lns = #recent_cache[source_bufnr].content
   local target_line = math.max(math.floor(minimap_total_lns * curr_line_percent + 0.5), 1)
 
   -- update minimap highlight
@@ -187,12 +205,12 @@ local function on_update(force)
     return
   end
 
-  local curr_buf_nr = fn.bufnr('%')
+  local curr_bufnr = fn.bufnr('%')
 
-  if force or recent_cache[curr_buf_nr] == nil then
-    generate_minimap(curr_buf_nr)
+  if force or recent_cache[curr_bufnr] == nil then
+    generate_minimap(curr_bufnr)
   end
-  render_minimap(curr_buf_nr)
+  render_minimap(curr_bufnr)
 
   -- set the highlights
   on_move()

@@ -10,6 +10,7 @@ M.options = {
   closed_filetypes = {'NvimTree', 'dashboard', 'TelescopePrompt'},
   closed_buftypes = {'prompt'},
   -- unimplemented from here down
+  remember_file_pos = true,
   cache_limit = 20
 }
 
