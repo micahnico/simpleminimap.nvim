@@ -7,9 +7,9 @@ M.options = {
   auto_open = true,
   ignored_filetypes = {'NvimTree', 'dashboard', "TelescopePrompt", ""},
   ignored_buftypes = {'prompt'},
+  closed_filetypes = {'NvimTree', 'dashboard', 'TelescopePrompt'},
+  closed_buftypes = {'prompt'},
   -- unimplemented from here down
-  closed_filetypes = {},
-  closed_buftypes = {},
   cache_limit = 20
 }
 

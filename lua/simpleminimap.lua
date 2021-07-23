@@ -17,6 +17,10 @@ local function is_blocked(ft, bt)
   return contains(config.ignored_filetypes, ft) or contains(config.ignored_buftypes, bt)
 end
 
+local function is_closed(ft, bt)
+  return contains(config.closed_filetypes, ft) or contains(config.closed_buftypes, bt)
+end
+
 local function add_highlight(minimap_win_id, target_line)
   if not current_highlight then
     fn.matchaddpos(config.highlight_group, {target_line}, 200, config.highlight_match_id, {window = minimap_win_id })
@@ -34,7 +38,9 @@ end
 
 local function open()
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  if minimap_win_nr > -1 or is_blocked(bufopt.filetype, bufopt.buftype) then
+  if minimap_win_nr > -1
+      or is_blocked(bufopt.filetype, bufopt.buftype)
+      or is_closed(bufopt.filetype, bufopt.buftype) then
     return
   end
 
@@ -121,6 +127,11 @@ local function render_minimap(buf_nr)
 end
 
 local function on_move()
+  if is_closed(bufopt.filetype, bufopt.buftype) then
+    close()
+    return
+  end
+
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
   local curr_buf_nr = fn.bufnr('%')
   if minimap_win_nr == -1
@@ -160,6 +171,11 @@ local function on_move()
 end
 
 local function on_update(force)
+  if is_closed(bufopt.filetype, bufopt.buftype) then
+    close()
+    return
+  end
+
   if bufopt.filetype == 'minimap' or is_blocked(bufopt.filetype, bufopt.buftype) then
     return
   end

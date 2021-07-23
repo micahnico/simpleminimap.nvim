@@ -14,7 +14,7 @@ command! SimpleMinimapClose lua require'simpleminimap'.close()
 
 autocmd! BufEnter * lua require'simpleminimap'.on_update()
 autocmd! BufWritePost,VimResized * lua require'simpleminimap'.on_update(true)
-autocmd! CursorMoved,CursorMovedI,FocusGained * lua require'simpleminimap'.on_move()
+autocmd! CursorMoved,CursorMovedI * lua require'simpleminimap'.on_move()
 autocmd! QuitPre * lua require'simpleminimap'.on_quit()
 
 let &cpo = s:save_cpo " and restore after
