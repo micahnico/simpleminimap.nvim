@@ -140,8 +140,8 @@ local function on_move()
 
   -- go to the line in the source file if in minimap
   if curr_ft == 'minimap' then
-    source_bufnr = fn.bufnr("#")
     cmd("wincmd p")
+    source_bufnr = fn.bufnr("%")
     local source_total_lns = fn.line("$")
     local coor_source_line = math.max(math.floor(source_total_lns * curr_line_percent + 0.5), 1)
     fn.cursor(tostring(coor_source_line), 0)
