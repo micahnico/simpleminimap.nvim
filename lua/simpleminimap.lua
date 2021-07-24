@@ -24,14 +24,17 @@ end
 local function add_highlight(minimap_win_id, target_line)
   if not current_highlight then
     fn.matchaddpos(config.highlight_group, {target_line}, 200, config.highlight_match_id, {window = minimap_win_id })
-    current_highlight = config.highlight_match_id
+    current_highlight = {
+      id = config.highlight_match_id,
+      line = target_line,
+    }
   end
 end
 
 local function clear_highlight(minimap_win_id)
   if current_highlight then
     -- using a vim.cmd instead of fn.matchdelete because I couldn't figure out how to make it fail silently
-    cmd("silent! call matchdelete("..current_highlight..", "..minimap_win_id..")")
+    cmd("silent! call matchdelete("..current_highlight.id..", "..minimap_win_id..")")
     current_highlight = nil
   end
 end
@@ -174,11 +177,17 @@ local function on_move()
     cmd("wincmd p")
   end
 
+  local minimap_total_lns = #recent_cache[source_bufnr].content
+  local target_line = math.max(math.floor(minimap_total_lns * curr_line_percent + 0.5), 1)
+
   -- update the cached cursor position for the source buffer
   update_cursor_pos(source_bufnr, source_line, source_col)
 
-  local minimap_total_lns = #recent_cache[source_bufnr].content
-  local target_line = math.max(math.floor(minimap_total_lns * curr_line_percent + 0.5), 1)
+  -- if the minimap line doesn't change, then don't update highlights
+  if current_highlight ~= nil and target_line == current_highlight.line then
+    handling_move = false
+    return
+  end
 
   -- update minimap highlight
   local minimap_win_id = fn.win_getid(minimap_win_nr)
