@@ -184,6 +184,12 @@ local function on_move()
     cmd("wincmd p")
   end
 
+  -- one more check to handle any weird edge cases
+  if recent_cache[source_bufnr] == nil then
+    handling_move = false
+    return
+  end
+
   local minimap_total_lns = #recent_cache[source_bufnr].content
   local target_line = math.max(math.floor(minimap_total_lns * curr_line_percent + 0.5), 1)
 
@@ -237,6 +243,7 @@ end
 
 local function reset()
   recent_cache = {}
+  close()
   on_update(true)
 end
 
