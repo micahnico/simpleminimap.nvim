@@ -225,9 +225,15 @@ local function on_update(force)
   on_move()
 end
 
+local function reset()
+  recent_cache = {}
+  on_update(true)
+end
+
 return {
   open = open,
   close = close,
+  reset = reset,
   on_update = on_update,
   on_move = on_move,
   on_quit = on_quit

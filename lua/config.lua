@@ -11,7 +11,6 @@ M.options = {
   closed_buftypes = {'prompt'},
   -- unimplemented from here down
   remember_file_pos = true,
-  cache_limit = 20
 }
 
 M.setup = function(user_data)
