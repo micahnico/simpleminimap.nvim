@@ -9,7 +9,6 @@ M.options = {
   ignored_buftypes = {'prompt'},
   closed_filetypes = {'NvimTree', 'dashboard', 'TelescopePrompt'},
   closed_buftypes = {'prompt'},
-  -- unimplemented from here down
   remember_file_pos = true,
 }
 

@@ -127,6 +127,7 @@ local function render_minimap(buf_nr)
     return
   end
 
+  local curr_view = fn.winsaveview()
   -- switch to the minimap window
   cmd(minimap_win_nr.." . ".."wincmd w")
   bufopt.modifiable = true
@@ -136,6 +137,7 @@ local function render_minimap(buf_nr)
   bufopt.modifiable = false
   -- back to the source file
   cmd("wincmd p")
+  fn.winrestview(curr_view)
 end
 
 local function on_move()
@@ -145,12 +147,17 @@ local function on_move()
   end
 
   local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  local cur_bufnr = fn.bufnr('%')
+  local curr_bufnr = fn.bufnr('%')
   if minimap_win_nr == -1
-      or (bufopt.filetype ~= 'minimap' and recent_cache[cur_bufnr] == nil)
-      or (bufopt.filetype ~= 'minimap' and recent_cache[cur_bufnr].col ~= fn.col(".") and recent_cache[cur_bufnr].line == fn.line("."))
+      or (bufopt.filetype ~= 'minimap' and recent_cache[curr_bufnr] == nil)
       or handling_move
       or is_blocked(bufopt.filetype, bufopt.buftype) then
+    return
+  end
+
+  -- if the column changed but not the line, update the saved cursor position but not the highlights
+  if bufopt.filetype ~= 'minimap' and recent_cache[curr_bufnr].col ~= fn.col(".") and recent_cache[curr_bufnr].line == fn.line(".") then
+    update_cursor_pos(curr_bufnr, fn.line("."), fn.col("."))
     return
   end
 
@@ -220,6 +227,11 @@ local function on_update(force)
     generate_minimap(curr_bufnr)
   end
   render_minimap(curr_bufnr)
+
+  -- go back to the last saved line if remember_file_pos option is enabled
+  if not force and config.remember_file_pos then
+    fn.cursor(recent_cache[curr_bufnr].line, recent_cache[curr_bufnr].col)
+  end
 
   -- set the highlights
   on_move()
