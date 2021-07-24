@@ -45,8 +45,8 @@ local function update_cursor_pos(bufnr, line, col)
 end
 
 local function open()
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  if minimap_win_nr > -1
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
+  if minimap_winnr > -1
       or is_blocked(bufopt.filetype, bufopt.buftype)
       or is_closed(bufopt.filetype, bufopt.buftype) then
     return
@@ -82,29 +82,29 @@ local function open()
 end
 
 local function close()
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
 
   -- return if no minimap open
-  if minimap_win_nr == -1 then
+  if minimap_winnr == -1 then
     return
   end
 
-  local minimap_win_id = fn.win_getid(minimap_win_nr)
+  local minimap_win_id = fn.win_getid(minimap_winnr)
   clear_highlight(minimap_win_id)
   api.nvim_win_close(minimap_win_id, true)
 end
 
 local function on_quit()
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
   -- quits if only the minimap and one other window are open
-  if minimap_win_nr > -1 and #api.nvim_list_wins() == 2 then
+  if minimap_winnr > -1 and #api.nvim_list_wins() == 2 then
     close()
   end
 end
 
-local function generate_minimap(buf_nr)
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  local minimap_win_id = fn.win_getid(minimap_win_nr)
+local function generate_minimap(bufnr)
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
+  local minimap_win_id = fn.win_getid(minimap_winnr)
 
   local wscale = 1.75 * config.width / math.min(fn.winwidth('%'), 120)
   local hscale = 4.0 * fn.winheight(minimap_win_id) / fn.line('$')
@@ -113,7 +113,7 @@ local function generate_minimap(buf_nr)
 
   -- save to cache
   if #minimap_content > 0 then
-    recent_cache[buf_nr] = {
+    recent_cache[bufnr] = {
       content = minimap_content,
       line = fn.line("."),
       col = fn.col("."),
@@ -121,18 +121,18 @@ local function generate_minimap(buf_nr)
   end
 end
 
-local function render_minimap(buf_nr)
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  if minimap_win_nr == -1 or recent_cache[buf_nr] == nil then
+local function render_minimap(bufnr)
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
+  if minimap_winnr == -1 or recent_cache[bufnr] == nil then
     return
   end
 
   local curr_view = fn.winsaveview()
   -- switch to the minimap window
-  cmd(minimap_win_nr.." . ".."wincmd w")
+  cmd(minimap_winnr.." . ".."wincmd w")
   bufopt.modifiable = true
   cmd("silent 1,$delete _")
-  fn.append(1, recent_cache[buf_nr].content)
+  fn.append(1, recent_cache[bufnr].content)
   cmd("silent 1delete _")
   bufopt.modifiable = false
   -- back to the source file
@@ -146,9 +146,9 @@ local function on_move()
     return
   end
 
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
   local curr_bufnr = fn.bufnr('%')
-  if minimap_win_nr == -1
+  if minimap_winnr == -1
       or (bufopt.filetype ~= 'minimap' and recent_cache[curr_bufnr] == nil)
       or handling_move
       or is_blocked(bufopt.filetype, bufopt.buftype) then
@@ -197,7 +197,7 @@ local function on_move()
   end
 
   -- update minimap highlight
-  local minimap_win_id = fn.win_getid(minimap_win_nr)
+  local minimap_win_id = fn.win_getid(minimap_winnr)
   clear_highlight(minimap_win_id)
   add_highlight(minimap_win_id, target_line)
 
@@ -210,15 +210,13 @@ local function on_update(force)
     return
   end
 
-  if bufopt.filetype == 'minimap' or is_blocked(bufopt.filetype, bufopt.buftype) then
+  local minimap_winnr = fn.bufwinnr('-MINIMAP-')
+  if bufopt.filetype == 'minimap'
+      or is_blocked(bufopt.filetype, bufopt.buftype)
+      or (minimap_winnr == -1 and not config.auto_open) then
     return
-  end
-
-  local minimap_win_nr = fn.bufwinnr('-MINIMAP-')
-  if minimap_win_nr == -1 and config.auto_open then
+  elseif minimap_winnr == -1 and config.auto_open then
     open()
-  elseif minimap_win_nr == -1 then
-    return
   end
 
   local curr_bufnr = fn.bufnr('%')
