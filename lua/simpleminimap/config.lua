@@ -7,7 +7,7 @@ M.options = {
   auto_open = false,
   remember_file_pos = false,
   ignored_filetypes = {'nerdtree', 'fugitive', 'NvimTree', ''},
-  ignored_buftypes = {'nofile', 'nowrite', 'quickfix', 'terminal'},
+  ignored_buftypes = {'nowrite', 'quickfix', 'terminal'},
   closed_filetypes = {'dashboard', 'TelescopePrompt', 'netrw'},
   closed_buftypes = {'prompt'},
 }
