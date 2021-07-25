@@ -1,4 +1,4 @@
-local config = require('config').options
+local config = require('simpleminimap.config').options
 local contains = require('helpers').contains
 local split = require('helpers').split
 
