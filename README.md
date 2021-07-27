@@ -20,11 +20,13 @@ This plugin was inspired by [wfxr/minimap.vim](https://github.com/wfxr/minimap.v
 ### Optimizations over [wfxr/minimap.vim](https://github.com/wfxr/minimap.vim)
 1. Highlights are not updated at all when moving horizontally
 2. Highlights are only updated vertically when the cooresponding line on the minimap changes
-3. It doesn't cause [Telescope's](https://github.com/nvim-telescope/telescope.nvim) registers picker to crash and not open
+3. It doesn't cause [Telescope's](https://github.com/nvim-telescope/telescope.nvim) registers picker to crash and not open  
 
-### How to setup
+*Note: over time, [wfxr/minimap.vim](https://github.com/wfxr/minimap.vim) might be optimized more than it is currently (7/26/21)*
+
+## How to setup
 1. Install [wfxr/code-minimap](https://github.com/wfxr/code-minimap)
-2. Use a plugin manager (the example uses [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim)) to install it  
+2. Use a plugin manager to install it (the example uses [wbthomason/packer.nvim](https://github.com/wbthomason/packer.nvim))  
 `use 'micahnico/simpleminimap.nvim'`
 3. Customize the options however you want
 
