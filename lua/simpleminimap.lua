@@ -108,7 +108,7 @@ local function generate_minimap(bufnr)
 
   local wscale = 1.75 * config.width / math.min(fn.winwidth('%'), 120)
   local hscale = 4.0 * fn.winheight(minimap_win_id) / fn.line('$')
-  local cmd_output = fn.system("code-minimap "..fn.expand('%').." -H "..wscale.." -V "..hscale.." --padding "..config.width)
+  local cmd_output = fn.system("code-minimap '"..fn.expand('%').."' -H "..wscale.." -V "..hscale.." --padding "..config.width)
   local minimap_content = split(cmd_output, "\n")
 
   -- save to cache
