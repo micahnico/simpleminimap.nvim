@@ -233,7 +233,7 @@ local function on_update(force)
   render_minimap(curr_bufnr)
 
   -- go back to the last saved line if remember_file_pos option is enabled
-  if not force and config.remember_file_pos then
+  if not force and config.remember_file_pos and recent_cache[curr_bufnr] ~= nil then
     fn.cursor(recent_cache[curr_bufnr].line, recent_cache[curr_bufnr].col)
   end
 
