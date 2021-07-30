@@ -7,14 +7,11 @@ but simpleminimap.nvim is more performant, especially noticeable in heavy files.
 This plugin was inspired by [wfxr/minimap.vim](https://github.com/wfxr/minimap.vim), which is why some things are similar.
 
 ### Why use simpleminimap.nvim?
-- You want a simple minimap to display an overview of your files and show your current position
-- You prefer lighter plugins to heavy ones with an overload of features
+- You want a simple, performant minimap to display an overview of your files and show your current position
 - You don't need/care about git highlighting or search highlighting in the minimap
-- You want a minimap that won't cause issues with other plugins (if any do, let me know!)
 
 ### Why not use simpleminimap.nvim
-- You NEED git highlighting in your minimap
-- You want search highlighting in the minimap
+- You NEED git highlighting and search highlighting in your minimap
 - You don't like minimaps or don't care for them
 
 ### Optimizations over [wfxr/minimap.vim](https://github.com/wfxr/minimap.vim)
